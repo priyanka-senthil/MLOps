@@ -86,26 +86,3 @@ def load_model_elbow(filename: str, sse: list):
     except Exception:
         # if not numeric, still return a JSON-friendly version
         return pred.item() if hasattr(pred, "item") else pred
-
-
-def validate_data(data_b64: str):
-    """
-    Validates the data for missing values or invalid ranges.
-    Logs warnings but still allows flow to continue.
-    """
-    data_bytes = base64.b64decode(data_b64)
-    df = pickle.loads(data_bytes)
-
-    missing = df.isnull().sum().sum()
-    if missing > 0:
-        print(f"Data contains {missing} missing values.")
-    else:
-        print("No missing values found.")
-
-    # Check numerical ranges
-    if (df.select_dtypes("number") < 0).any().any():
-        print("Some numeric columns have negative values.")
-
-    # Re-serialize and return (so next task still works)
-    validated_data = pickle.dumps(df)
-    return base64.b64encode(validated_data).decode("ascii")
