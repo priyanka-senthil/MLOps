@@ -47,6 +47,7 @@ docker-compose.yaml
 logs/
 working_data/
 plugins/
+lab_01/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
