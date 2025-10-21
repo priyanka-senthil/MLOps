@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from predict import router as predict_router
+from dashboard import router as dashboard_router
 from train import train_model
 from data import TrainResponse
 
@@ -22,6 +23,7 @@ app.add_middleware(
 
 # Routers
 app.include_router(predict_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/", tags=["meta"])
@@ -29,6 +31,7 @@ def root():
     return {
         "message": "Welcome to Wine Classifier API",
         "docs": "/docs",
+        "dashboard": "/dashboard",
         "health": "/health",
         "predict": "/predict",
         "train": "/train",
