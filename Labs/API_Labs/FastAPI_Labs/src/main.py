@@ -1,35 +1,49 @@
-from fastapi import FastAPI, status, HTTPException
-from pydantic import BaseModel
-from predict import predict_data
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from predict import router as predict_router
+from train import train_model
+from data import TrainResponse
+
+app = FastAPI(
+    title="Wine Classifier API",
+    description="FastAPI service for sklearn Wine dataset with model versioning, metrics, and probabilities.",
+    version="1.0.0",
+)
+
+# Allow local dev tools / notebooks / Postman
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # tighten for prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Routers
+app.include_router(predict_router)
 
 
-app = FastAPI()
-
-class IrisData(BaseModel):
-    petal_length: float
-    sepal_length: float
-    petal_width: float
-    sepal_width: float
-
-class IrisResponse(BaseModel):
-    response:int
-
-@app.get("/", status_code=status.HTTP_200_OK)
-async def health_ping():
-    return {"status": "healthy"}
-
-@app.post("/predict", response_model=IrisResponse)
-async def predict_iris(iris_features: IrisData):
-    try:
-        features = [[iris_features.sepal_length, iris_features.sepal_width,
-                    iris_features.petal_length, iris_features.petal_width]]
-
-        prediction = predict_data(features)
-        return IrisResponse(response=int(prediction[0]))
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
+@app.get("/", tags=["meta"])
+def root():
+    return {
+        "message": "Welcome to Wine Classifier API",
+        "docs": "/docs",
+        "health": "/health",
+        "predict": "/predict",
+        "train": "/train",
+    }
 
 
-    
+@app.post("/train", response_model=TrainResponse, tags=["training"])
+def train():
+    """
+    Retrain the model and update artifacts (model/*.pkl, metadata.json).
+    """
+    result = train_model()
+    return {
+        "status": "ok",
+        "model_version": result["version"],
+        "metrics": result["metrics"],
+        "saved_artifacts": result["artifacts"],
+    }

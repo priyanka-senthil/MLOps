@@ -1,27 +1,40 @@
-import numpy as np
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
+from pydantic import BaseModel, Field
+from typing import Optional, Dict, Any
 
-def load_data():
-    """
-    Load the Iris dataset and return the features and target values.
-    Returns:
-        X (numpy.ndarray): The features of the Iris dataset.
-        y (numpy.ndarray): The target values of the Iris dataset.
-    """
-    iris = load_iris()
-    X = iris.data
-    y = iris.target
-    return X, y
 
-def split_data(X, y):
-    """
-    Split the data into training and testing sets.
-    Args:
-        X (numpy.ndarray): The features of the dataset.
-        y (numpy.ndarray): The target values of the dataset.
-    Returns:
-        X_train, X_test, y_train, y_test (tuple): The split dataset.
-    """
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=12)
-    return X_train, X_test, y_train, y_test
+# Input schema for Wine dataset (13 features)
+# Names match sklearn's load_wine().feature_names
+class WineData(BaseModel):
+    alcohol: float = Field(..., ge=0)
+    malic_acid: float = Field(..., ge=0)
+    ash: float = Field(..., ge=0)
+    alcalinity_of_ash: float = Field(..., ge=0)
+    magnesium: float = Field(..., ge=0)
+    total_phenols: float = Field(..., ge=0)
+    flavanoids: float = Field(..., ge=0)
+    nonflavanoid_phenols: float = Field(..., ge=0)
+    proanthocyanins: float = Field(..., ge=0)
+    color_intensity: float = Field(..., ge=0)
+    hue: float = Field(..., ge=0)
+    od280_od315_of_diluted_wines: float = Field(..., ge=0)
+    proline: float = Field(..., ge=0)
+
+
+class PredictResponse(BaseModel):
+    predicted_class_id: int
+    predicted_class_name: str
+    confidence: float
+    model_version: str
+
+
+class HealthResponse(BaseModel):
+    status: str
+    model_loaded: bool
+    model_version: Optional[str] = None
+
+
+class TrainResponse(BaseModel):
+    status: str
+    model_version: str
+    metrics: Dict[str, Any]
+    saved_artifacts: Dict[str, str]
