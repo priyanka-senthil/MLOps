@@ -9,14 +9,42 @@ Unlike the original Iris dataset lab, this version introduces enhancements such 
 - Model retraining via API
 - Metadata and version tracking
 - Logging and error handling
-- Clean modular structure (`data.py`, `train.py`, `predict.py`, `main.py`)
+- **Interactive web dashboard** for monitoring and testing
+- Clean modular structure (`data.py`, `train.py`, `predict.py`, `main.py`, `dashboard.py`)
 
+## 🎯 Quick Start Guide
+
+1. **Clone and setup:**
+   ```bash
+   cd fastapi_lab1
+   python -m venv fastapi_lab1_env
+   source fastapi_lab1_env/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **Train model:**
+   ```bash
+   cd src
+   python train.py
+   cd ..
+   ```
+
+3. **Start server:**
+   ```bash
+   uvicorn src.main:app --reload
+   ```
+
+4. **Access dashboard:**
+   - Open browser: `http://127.0.0.1:8000/dashboard`
+   - Test predictions using the interactive form
+   - Monitor model performance in real-time
 
 ## 🧠 Objective
 To demonstrate how an ML model can be:
 1. **Trained and serialized** as an artifact (`.pkl` file)
 2. **Served through FastAPI** as a prediction service
 3. **Extended** with endpoints for retraining, confidence scoring, and health checks
+4. **Monitored and tested** through an interactive web dashboard
 
 
 ## 🧩 Key Features
@@ -26,7 +54,8 @@ To demonstrate how an ML model can be:
 | **Model** | `RandomForestClassifier` with `StandardScaler` in a `Pipeline` |
 | **Confidence Score** | Returns probability of the predicted class (`0.0–1.0`) |
 | **Versioning** | Each model has a UTC-based version string (e.g., `2025-10-20T23-09-30`) |
-| **Endpoints** | `/predict`, `/train`, `/health`, `/` (root metadata) |
+| **Endpoints** | `/predict`, `/train`, `/health`, `/dashboard`, `/` (root metadata) |
+| **Dashboard** | Interactive web UI for monitoring metrics and testing predictions |
 | **Logging** | Structured logs for both training and predictions saved under `logs/` |
 | **Error Handling** | Returns clear HTTP status codes and messages |
 | **Pydantic Models** | Used for request validation and response formatting |
@@ -34,25 +63,26 @@ To demonstrate how an ML model can be:
 
 ## 🗂️ Project Structure
 ```
-
 mlops_labs/
 └── fastapi_lab1/
-├── model/
-│   ├── wine_model_2025-10-20T23-27-44.pkl
-│   └── metadata.json
-├── logs/
-│   ├── train.log
-│   └── app.log
-├── src/
-│   ├── __init__.py
-│   ├── data.py
-│   ├── train.py
-│   ├── predict.py
-│   └── main.py
-├── requirements.txt
-└── README.md
-
-````
+    ├── model/
+    │   ├── wine_model_2025-10-20T23-27-44.pkl
+    │   └── metadata.json
+    ├── logs/
+    │   ├── train.log
+    │   └── app.log
+    ├── src/
+    │   ├── __init__.py
+    │   ├── data.py
+    │   ├── train.py
+    │   ├── predict.py
+    │   ├── main.py
+    │   ├── dashboard.py
+    │   └── templates/
+    │       └── dashboard.html
+    ├── requirements.txt
+    └── README.md
+```
 
 
 ## ⚙️ Setup Instructions
@@ -62,58 +92,76 @@ mlops_labs/
 python -m venv fastapi_lab1_env
 source fastapi_lab1_env/bin/activate   # Mac/Linux
 fastapi_lab1_env\Scripts\activate      # Windows
-````
+```
 
 ### 2️⃣ Install dependencies
-
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 3️⃣ Train the model
-
 ```bash
 cd src
 python train.py
+cd ..
 ```
 
 This will:
+- Train a `RandomForestClassifier`
+- Save the model under `model/`
+- Generate `metadata.json` with version, metrics, and class names
+- Log training details in `logs/train.log`
 
-* Train a `RandomForestClassifier`
-* Save the model under `model/`
-* Generate `metadata.json` with version, metrics, and class names
-* Log training details in `logs/train.log`
+Sample output:
+```json
+{
+  "status": "ok",
+  "model_version": "2025-10-20T23-09-30",
+  "metrics": {
+    "accuracy": 1.0,
+    "precision_weighted": 1.0,
+    "recall_weighted": 1.0,
+    "f1_weighted": 1.0
+  }
+}
+```
+
 
 ## 🚀 Running the API Server
 
 Run from the project root (recommended):
-
 ```bash
 cd src
 uvicorn main:app --reload
 ```
 
 Server will start at:
-
 ```
 http://127.0.0.1:8000
 ```
 
 
+## 🎨 Dashboard
+
+### Accessing the Dashboard
+Open your browser and navigate to:
+```
+http://127.0.0.1:8000/dashboard
+```
+
 ## 🧪 API Endpoints
 
 ### **1️⃣ Root Endpoint**
-
 **`GET /`**
 
 > Displays available routes and API metadata.
 
 Example:
-
 ```json
 {
   "message": "Welcome to Wine Classifier API",
   "docs": "/docs",
+  "dashboard": "/dashboard",
   "health": "/health",
   "predict": "/predict",
   "train": "/train"
@@ -121,14 +169,24 @@ Example:
 ```
 
 
-### **2️⃣ Health Check**
+### **2️⃣ Dashboard**
+**`GET /dashboard`**
 
+> Interactive web interface for monitoring and testing the model.
+
+Features:
+- Real-time metrics display
+- Confusion matrix visualization
+- Live prediction testing
+- Model retraining interface
+
+
+### **3️⃣ Health Check**
 **`GET /health`**
 
 > Confirms whether the model is loaded and provides version info.
 
 Response:
-
 ```json
 {
   "status": "ok",
@@ -138,14 +196,12 @@ Response:
 ```
 
 
-### **3️⃣ Prediction Endpoint**
-
+### **4️⃣ Prediction Endpoint**
 **`POST /predict`**
 
 > Predicts wine class from 13 numerical features and returns confidence.
 
 #### Request Body
-
 ```json
 {
   "alcohol": 13.2,
@@ -165,7 +221,6 @@ Response:
 ```
 
 #### Example Response
-
 ```json
 {
   "predicted_class_id": 0,
@@ -176,18 +231,16 @@ Response:
 ```
 
 > **Confidence Score:**
-> Represents the model’s probability for the predicted class (range 0–1).
+> Represents the model's probability for the predicted class (range 0–1).
 > A higher value = stronger certainty.
 
 
-### **4️⃣ Retraining Endpoint**
-
+### **5️⃣ Retraining Endpoint**
 **`POST /train`**
 
 > Triggers model retraining and updates stored artifacts.
 
 Response:
-
 ```json
 {
   "status": "ok",
@@ -208,37 +261,36 @@ Response:
 
 ## 🧰 Pydantic Data Models
 
-| Model             | Purpose                                                     |
-| ----------------- | ----------------------------------------------------------- |
-| `WineData`        | Defines structure & validation for incoming prediction data |
-| `PredictResponse` | Formats API prediction output                               |
-| `TrainResponse`   | Formats retraining results                                  |
-| `HealthResponse`  | Used for `/health` endpoint                                 |
+| Model | Purpose |
+|-------|---------|
+| `WineData` | Defines structure & validation for incoming prediction data |
+| `PredictResponse` | Formats API prediction output |
+| `TrainResponse` | Formats retraining results |
+| `HealthResponse` | Used for `/health` endpoint |
 
 
 ## 📊 Metrics & Logging
 
-| Log File         | Description                                   |
-| ---------------- | --------------------------------------------- |
+| Log File | Description |
+|----------|-------------|
 | `logs/train.log` | Model training progress, metrics, saved files |
-| `logs/app.log`   | API-level logs for predictions and errors     |
+| `logs/app.log` | API-level logs for predictions and errors |
 
 All logs include timestamps and severity levels for traceability.
 
 
 ## 🧠 How Confidence Score Works
 
-The **confidence score** represents the **maximum predicted probability** from the model’s `predict_proba()` output:
+The **confidence score** represents the **maximum predicted probability** from the model's `predict_proba()` output:
 
 ```python
 proba = model.predict_proba(X).max()
 ```
 
 This value indicates how certain the model is about its classification:
-
-* `>0.9` → Very confident
-* `0.6–0.9` → Moderately confident
-* `<0.6` → Low confidence (consider review)
+- `>0.9` → Very confident
+- `0.6–0.9` → Moderately confident
+- `<0.6` → Low confidence (consider review)
 
 Including confidence scores makes the API more **interpretable**, **transparent**, and **ready for real-world integration**.
 
@@ -265,6 +317,7 @@ curl -X POST http://127.0.0.1:8000/predict \
   }'
 ```
 
+
 ## 🧰 Requirements
 
 ```text
@@ -274,13 +327,5 @@ scikit-learn
 joblib
 numpy
 pydantic
+jinja2
 ```
-
-## 🏁 Summary
-
-This FastAPI lab demonstrates how to build a **production-like ML inference service** that not only predicts but also provides:
-
-* Versioning
-* Confidence scores
-* Retraining and health monitoring
-* Logging and modular architecture
